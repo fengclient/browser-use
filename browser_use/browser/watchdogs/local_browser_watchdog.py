@@ -108,13 +108,13 @@ class LocalBrowserWatchdog(BaseWatchdog):
 				# Get launch args from profile
 				launch_args = profile.get_args()
 
-				# Add debugging port unless the caller already provided one.
-				# Reusing an explicit port lets external DevTools clients attach to
-				# browser-use-launched browsers.
-				debug_port = self._get_configured_remote_debugging_port(launch_args)
-				if debug_port is None:
-					debug_port = self._find_free_port()
-					launch_args.append(f'--remote-debugging-port={debug_port}')
+				# Add debugging port
+				debug_port = self._find_free_port()
+				launch_args.extend(
+					[
+						f'--remote-debugging-port={debug_port}',
+					]
+				)
 				assert '--user-data-dir' in str(launch_args), (
 					'User data dir must be set somewhere in launch args to a non-default path, otherwise Chrome will not let us attach via CDP'
 				)
@@ -403,20 +403,6 @@ class LocalBrowserWatchdog(BaseWatchdog):
 			s.listen(1)
 			port = s.getsockname()[1]
 		return port
-
-	@staticmethod
-	def _get_configured_remote_debugging_port(launch_args: list[str]) -> int | None:
-		"""Return the caller-provided remote debugging port, if any."""
-		for arg in reversed(launch_args):
-			if arg.startswith('--remote-debugging-port='):
-				value = arg.split('=', 1)[1].strip()
-				if not value:
-					return None
-				try:
-					return int(value)
-				except ValueError:
-					return None
-		return None
 
 	@staticmethod
 	async def _wait_for_cdp_url(port: int, timeout: float = 30) -> str:
