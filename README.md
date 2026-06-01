@@ -38,6 +38,8 @@
 
 </br>
 
+> **Unofficial fork:** `browser-use-volcengine` is a drop-in replacement for `browser-use` with Volcengine / Ark compatibility patches. Install this package, keep importing `browser_use`, and follow the upstream Browser Use docs unless this README notes otherwise. This package is not an official Volcengine package.
+
 🌤️ Want to skip the setup? Use our <b>[cloud](https://cloud.browser-use.com?utm_source=github&utm_medium=readme-skip-setup)</b> for faster, scalable, stealth-enabled browser automation!
 
 # 🤖 LLM Quickstart
@@ -49,10 +51,10 @@
 
 # 👋 Human Quickstart
 
-**1. Create environment and install Browser-Use with [uv](https://docs.astral.sh/uv/) (Python>=3.11):**
+**1. Create environment and install the Browser-Use Volcengine fork with [uv](https://docs.astral.sh/uv/) (Python>=3.11):**
 ```bash
-uv init && uv add browser-use && uv sync
-# uvx browser-use install  # Run if you don't have Chromium installed
+uv init && uv add browser-use-volcengine && uv sync
+# uvx browser-use-volcengine install  # Run if you don't have Chromium installed
 ```
 
 **2. [Optional] Get your API key from [Browser Use Cloud](https://cloud.browser-use.com/new-api-key?utm_source=github&utm_medium=readme-quickstart-api-key):**
@@ -150,7 +152,7 @@ https://github.com/user-attachments/assets/ac34f75c-057a-43ef-ad06-5b2c9d42bf06
 **Want to get started even faster?** Generate a ready-to-run template:
 
 ```bash
-uvx browser-use init --template default
+uvx browser-use-volcengine init --template default
 ```
 
 This creates a `browser_use_default.py` file with a working example. Available templates:
@@ -160,7 +162,7 @@ This creates a `browser_use_default.py` file with a working example. Available t
 
 You can also specify a custom output path:
 ```bash
-uvx browser-use init --template default --output my_agent.py
+uvx browser-use-volcengine init --template default --output my_agent.py
 ```
 
 <br/>
@@ -170,15 +172,15 @@ uvx browser-use init --template default --output my_agent.py
 Fast, persistent browser automation from the command line:
 
 ```bash
-browser-use open https://example.com    # Navigate to URL
-browser-use state                       # See clickable elements
-browser-use click 5                     # Click element by index
-browser-use type "Hello"                # Type text
-browser-use screenshot page.png         # Take screenshot
-browser-use close                       # Close browser
+browser-use-volcengine open https://example.com    # Navigate to URL
+browser-use-volcengine state                       # See clickable elements
+browser-use-volcengine click 5                     # Click element by index
+browser-use-volcengine type "Hello"                # Type text
+browser-use-volcengine screenshot page.png         # Take screenshot
+browser-use-volcengine close                       # Close browser
 ```
 
-The CLI keeps the browser running between commands for fast iteration. See [CLI docs](browser_use/skill_cli/README.md) for all commands.
+The CLI keeps the browser running between commands for fast iteration. This fork intentionally uses fork-specific command names to avoid colliding with the upstream `browser-use` package. See [CLI docs](browser_use/skill_cli/README.md) for all commands.
 
 ### Claude Code Skill
 
