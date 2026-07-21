@@ -24,6 +24,8 @@ uv sync
 
 - If the user mentions publishing to PyPI, default to the local release flow: update the requested version, commit the release state on `main`, run `./publish-pypi.sh`, and use the fork tag convention below unless the user explicitly says otherwise.
 
+- For every release preparation or PyPI publication, prepare changelog content in both Chinese and English.
+
 - For each PyPI release of this fork, create and push an annotated tag named `browser-use-volcengine-<version>` on the exact release commit. Do not use upstream version-only tags such as `0.12.6` for this fork.
 
 - Use descriptive names and docstrings for each action.
