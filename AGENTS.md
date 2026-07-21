@@ -18,6 +18,8 @@ uv sync
 
 - This fork's core project goal is preserving and shipping the extra fork-specific features on top of upstream Browser Use. When upgrading from upstream, always identify those extra features, keep them intact, and verify them explicitly before calling the upgrade complete.
 
+- Use plain upstream-style SemVer for the package/local version, such as `0.13.6`. Do not invent fork-specific version suffixes or alternate local version schemes unless the user explicitly asks.
+
 - PyPI releases for this fork must use the local `./publish-pypi.sh` script. The script reads `UV_PUBLISH_TOKEN` from the shell environment or a private `.env.pypi` file; never commit real PyPI tokens.
 
 - If the user mentions publishing to PyPI, default to the local release flow: update the requested version, commit the release state on `main`, run `./publish-pypi.sh`, and use the fork tag convention below unless the user explicitly says otherwise.
