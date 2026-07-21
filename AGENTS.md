@@ -16,6 +16,12 @@ uv sync
 
 - Pre-commit formatting: ALWAYS make sure to run pre-commit before making PRs.
 
+- PyPI releases for this fork must use the local `./publish-pypi.sh` script. The script reads `UV_PUBLISH_TOKEN` from the shell environment or a private `.env.pypi` file; never commit real PyPI tokens.
+
+- If the user mentions publishing to PyPI, default to the local release flow: update the requested version, commit the release state on `main`, run `./publish-pypi.sh`, and use the fork tag convention below unless the user explicitly says otherwise.
+
+- For each PyPI release of this fork, create and push an annotated tag named `browser-use-volcengine-<version>` on the exact release commit. Do not use upstream version-only tags such as `0.12.6` for this fork.
+
 - Use descriptive names and docstrings for each action.
 
 - Prefer returning `ActionResult` with structured content to help the agent reason better.
