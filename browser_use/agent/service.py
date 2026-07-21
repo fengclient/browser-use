@@ -25,7 +25,7 @@ from browser_use.agent.cloud_events import (
 )
 from browser_use.agent.message_manager.utils import save_conversation
 from browser_use.llm.base import BaseChatModel
-from browser_use.llm.exceptions import ModelProviderError, ModelRateLimitError
+from browser_use.llm.exceptions import ModelOutputTruncatedError, ModelProviderError, ModelRateLimitError
 from browser_use.llm.messages import BaseMessage, ContentPartImageParam, ContentPartTextParam, UserMessage
 from browser_use.tokens.service import TokenCost
 
@@ -77,6 +77,8 @@ from browser_use.utils import (
 	_log_pretty_path,
 	check_latest_browser_use_version,
 	get_browser_use_version,
+	is_placeholder_url,
+	sanitize_url_candidate,
 	time_execution_async,
 	time_execution_sync,
 )
@@ -239,10 +241,11 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 		if flash_mode:
 			enable_planning = False
 
-		# Auto-configure llm_screenshot_size for Claude Sonnet models
+		# Auto-configure llm_screenshot_size for Claude Sonnet, including gateway ids like
+		# 'anthropic/claude-sonnet-4-6' (rsplit drops the provider prefix before matching).
 		if llm_screenshot_size is None:
 			model_name = getattr(llm, 'model', '')
-			if isinstance(model_name, str) and model_name.startswith('claude-sonnet'):
+			if isinstance(model_name, str) and model_name.rsplit('/', 1)[-1].startswith('claude-sonnet'):
 				llm_screenshot_size = (1400, 850)
 				logger.info('🖼️  Auto-configured LLM screenshot size for Claude Sonnet: 1400x850')
 
@@ -322,7 +325,8 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 		# Enable coordinate clicking for models that support it
 		model_name = getattr(llm, 'model', '').lower()
 		supports_coordinate_clicking = any(
-			pattern in model_name for pattern in ['claude-sonnet-4', 'claude-opus-4', 'gemini-3-pro', 'browser-use/']
+			pattern in model_name
+			for pattern in ['claude-sonnet-4', 'claude-opus-4', 'claude-fable-5', 'gemini-3-pro', 'browser-use/']
 		)
 		if supports_coordinate_clicking:
 			self.tools.set_coordinate_clicking(True)
@@ -1602,6 +1606,7 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 		# Only pass request_type for ChatBrowserUse (other providers don't support it)
 		if self.judge_llm.provider == 'browser-use':
 			kwargs['request_type'] = 'judge'
+			kwargs['session_id'] = self.session_id
 
 		try:
 			response = await self.judge_llm.ainvoke(input_messages, **kwargs)
@@ -1986,8 +1991,9 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 		# 402: Insufficient credits/payment required - fallback to different provider
 		# 429: Rate limit exceeded
 		# 500, 502, 503, 504: Server errors
+		# ModelOutputTruncatedError: not retryable on the same model, but a fallback may have a higher cap
 		retryable_status_codes = {401, 402, 429, 500, 502, 503, 504}
-		is_retryable = isinstance(error, ModelRateLimitError) or (
+		is_retryable = isinstance(error, (ModelRateLimitError, ModelOutputTruncatedError)) or (
 			hasattr(error, 'status_code') and error.status_code in retryable_status_codes
 		)
 
@@ -2374,7 +2380,11 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 				original_position = match.start()  # Store original position before URL modification
 
 				# Remove trailing punctuation that's not part of URLs
-				url = re.sub(r'[.,;:!?()\[\]]+$', '', url)
+				url = sanitize_url_candidate(url)
+
+				if is_placeholder_url(url):
+					self.logger.debug(f'Excluding placeholder URL from auto-navigation: {url}')
+					continue
 
 				# Check if URL ends with a file extension that should be excluded
 				url_lower = url.lower()
@@ -2808,6 +2818,12 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 					break
 
 			except Exception as e:
+				# Re-raise InterruptedError so _check_stop_or_pause's stop/pause signal still propagates
+				if isinstance(e, InterruptedError):
+					raise
+				# Re-raise browser/connection errors so _handle_step_error can handle reconnect/shutdown
+				if self._is_connection_like_error(e):
+					raise
 				# Handle any exceptions during action execution
 				self.logger.error(f'❌ Executing action {i + 1} failed -> {type(e).__name__}: {e}')
 				await self._demo_mode_log(
@@ -2815,7 +2831,9 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 					'error',
 					{'action': action_name, 'step': self.state.n_steps},
 				)
-				raise e
+				# Preserve partial results so the agent knows which actions succeeded before the failure
+				results.append(ActionResult(error=f'{type(e).__name__}: {e}'))
+				return results
 
 		return results
 
@@ -4121,3 +4139,6 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 					elif isinstance(item, dict):
 						count += self._substitute_in_dict(item, replacements)
 		return count
+
+
+_PythonAgent = Agent
