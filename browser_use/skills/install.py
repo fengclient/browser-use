@@ -71,7 +71,9 @@ def _install_browser_use_tool() -> None:
 
 	result = subprocess.run([uv, 'tool', 'install', '--python', '3.12', '--upgrade', '--force', PACKAGE_NAME])
 	if result.returncode != 0:
-		raise RuntimeError(f'Failed to install {PACKAGE_NAME} with `uv tool install --python 3.12 --upgrade --force {PACKAGE_NAME}`.')
+		raise RuntimeError(
+			f'Failed to install {PACKAGE_NAME} with `uv tool install --python 3.12 --upgrade --force {PACKAGE_NAME}`.'
+		)
 
 
 def _load_skill_text_from_browser_harness_cli() -> str:

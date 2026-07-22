@@ -16,6 +16,8 @@ venv/
 # IDEs
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # Build files
 dist/

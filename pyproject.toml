@@ -2,7 +2,7 @@
 name = "browser-use-volcengine"
 description = "Browser Use fork with Volcengine compatibility patches"
 authors = [{ name = "Gregor Zunic" }]
-version = "0.13.6"
+version = "0.13.7"
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
 classifiers = [

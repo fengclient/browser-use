@@ -40,6 +40,7 @@ class ChatOpenAI(BaseChatModel):
 	seed: int | None = None
 	service_tier: Literal['auto', 'default', 'flex', 'priority', 'scale'] | None = None
 	top_p: float | None = None
+	extra_body: dict[str, Any] | None = None
 	add_schema_to_system_prompt: bool = False  # Add JSON schema to system prompt instead of using response_format
 	dont_force_structured_output: bool = False  # If True, the model will not be forced to output a structured output
 	remove_min_items_from_schema: bool = (
@@ -188,6 +189,9 @@ class ChatOpenAI(BaseChatModel):
 
 			if self.service_tier is not None:
 				model_params['service_tier'] = self.service_tier
+
+			if self.extra_body is not None:
+				model_params['extra_body'] = self.extra_body
 
 			if self.reasoning_models and any(str(m).lower() in str(self.model).lower() for m in self.reasoning_models):
 				model_params['reasoning_effort'] = self.reasoning_effort
